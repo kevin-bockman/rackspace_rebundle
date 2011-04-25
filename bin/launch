@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+#
+# Launch a Rackspace server via API using image_id
+#
+# Syntax: launch <server_name> <image_id>
+#
+# NOTE: you must set RACKSPACE_ACCOUNT and RACKSPACE_API_TOKEN in your environment.
+#
+# cary@rightscale.com
+#
+require "rubygems"
+require "right_rackspace"
+require "pp"
+
+name = ARGV[0]
+image_id = ARGV[1]
+flavor_id = ARGV[2]
+
+unless name && image_id
+  puts "Syntax: launch <server_name> <image_id>" 
+  exit 1
+end
+
+# flavor_id.  This is what rackspace calls their instace sizes.
+# NOTE: if you choose a larger flavor, then new VMs 
+# must use same size or larger. Smaller sizes will fail.
+# So it is recommended that you leave it alone if possible.
+flavor_id = flavor_id || 1  # 256M
+
+
+account = ENV["RACKSPACE_ACCOUNT"]
+token = ENV["RACKSPACE_API_TOKEN"]
+unless account && token
+  puts "ERROR: you must define RACKSPACE_ACCOUNT and RACKSPACE_API_TOKEN in your env." 
+  exit 1
+end
+
+server = {
+  :name => name,
+  :image_id => image_id.to_i,  
+  :flavor_id => flavor_id.to_i      
+}
+
+# monkey patch: right_rackspace currently depends on rails .blank? method.
+class Object
+  def blank?
+    respond_to?(:empty?) ? empty? : !self
+  end
+end
+
+# Create new server using given image_id
+rackspace_api = ::Rightscale::Rackspace::Interface::new(account, token ,:verbose_errors => true)
+data = rackspace_api.create_server(:name => server[:name], :image_id => server[:image_id], :flavor_id => server[:flavor_id] )
+
+# Display info - like public IP addr and passwd
+pp data

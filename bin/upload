@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+#
+# Upload everything to a vanilla Rackspace image
+# prior to setup.
+#
+# Syntax: rackspace_upload.sh <server_address>
+#
+# cary@rightscale.com
+#
+
+puts `scp -r centos/* root@#{ARGV[0]}:/root/`

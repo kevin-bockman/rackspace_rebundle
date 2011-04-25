@@ -1,0 +1,14 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    json (1.5.1)
+    right_http_connection (1.3.0)
+    right_rackspace (0.0.0.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  json
+  right_http_connection
+  right_rackspace
