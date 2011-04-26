@@ -67,6 +67,8 @@ rm -f /var/log/rs-instance*
 rm -f /var/log/anaconda.*
 rm -rf /var/log/exim
 rm -rf /var/log/news
+rm -rf /var/cache/*
+rm -rf /var/mail/*
 
 find /etc -name \*~ -exec rm -- {} \;
 find /etc -name \*.backup* -exec rm -- {} \;
