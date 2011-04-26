@@ -58,7 +58,6 @@ yum -y clean all
 rm -f /var/spool/cloud/*
 rm -rf /tmp/* /tmp/.*
 mkdir /tmp/agent-smith
-rm -rf /var/cache/*
 
 #
 # Log files
@@ -71,4 +70,5 @@ rm -rf /var/mail/*
 find /etc -name \*~ -exec rm -- {} \;
 find /etc -name \*.backup* -exec rm -- {} \;
 
-
+rm -rf /root/files
+rm /root/*.sh
