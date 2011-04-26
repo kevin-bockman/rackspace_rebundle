@@ -36,40 +36,21 @@ yum -y clean all
 # State information
 #
 rm -f /var/spool/cloud/*
-rm -f /tmp/inject*
-rm -f /tmp/agent-smith*
+rm -rf /tmp/* /tmp/.*
+mkdir /tmp/agent-smith
 
 #
 # Log files
 #
-clean /var/log/agent-smith.log
-clean /log/audit.log
-clean /var/log/boot.log
-clean /var/log/btmp
-clean /var/log/cron
-clean /var/log/cups/error_log
-clean /var/log/decommission
-clean /var/log/dmesg
-clean /var/log/faillog
-clean /var/log/install
-clean /var/log/install
-clean /var/log/lastlog
-clean /var/log/maillog
-clean /var/log/messages
-clean /var/log/prelink/prelink.log
-clean /var/log/secure
-clean /var/log/spooler
-clean /var/log/tallylog
-clean /var/log/wtmp
-clean /var/log/yum.log
+find /var/log -type f -exec rm -f {} \;
 
-rm -f /var/log/rs-instance*
-rm -f /var/log/anaconda.*
-rm -rf /var/log/exim
-rm -rf /var/log/news
+find /var/spool/postfix -type f -exec rm -f {} \;
+
+rm -rf /var/cache/*
+rm -rf /var/mail/*
 
 find /etc -name \*~ -exec rm -- {} \;
 find /etc -name \*.backup* -exec rm -- {} \;
 
-rm -rf /root/files/
+rm -rf /root/files
 rm /root/*.sh
