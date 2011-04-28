@@ -28,9 +28,9 @@ rm -rf /root/.ssh
 rm -f /etc/hosts.backup.*
 
 #
-# Yum
+# Apt
 #
-yum -y clean all
+apt-get clean
 
 #
 # State information
@@ -45,10 +45,16 @@ mkdir /tmp/agent-smith
 find /var/log -type f -exec rm -f {} \;
 
 rm -rf /var/cache/*
+
+# Rebuild Apt cache
+mkdir -p /var/cache/apt/archives/partial /var/cache/debconf
+apt-cache gencaches
+
 rm -rf /var/mail/*
+rm -rf /root/.cache
 
 find /etc -name \*~ -exec rm -- {} \;
 find /etc -name \*.backup* -exec rm -- {} \;
 
 rm -rf /root/files
-rm /root/*.sh
+rm /root/*.sh /root/*.deb

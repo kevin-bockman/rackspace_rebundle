@@ -24,7 +24,8 @@ yum -y groupinstall Base
 yum -y install git bind-utils redhat-lsb.x86_64 parted xfsprogs ruby syslog-ng
 yum -y install wget mlocate nano logrotate ruby ruby-devel ruby-docs ruby-irb ruby-libs ruby-mode ruby-rdoc ruby-ri ruby-tcltk postfix openssl openssh openssh-askpass openssh-clients openssh-server curl gcc* zip unzip bison flex compat-libstdc++-296 cvs subversion autoconf automake libtool compat-gcc-34-g77 mutt sysstat rpm-build fping vim-common vim-enhanced rrdtool-1.2.27 rrdtool-devel-1.2.27 rrdtool-doc-1.2.27 rrdtool-perl-1.2.27 rrdtool-python-1.2.27 rrdtool-ruby-1.2.27 rrdtool-tcl-1.2.27 pkgconfig lynx screen yum-utils bwm-ng createrepo redhat-rpm-config redhat-lsb git nscd xfsprogs swig
 yum -y remove bluez* gnome-bluetooth*
-rpm --erase --nodeps --allmatches audit-libs-python checkpolicy dhcpv6-client libselinux-python libselinux-utils libsemanage policycoreutils prelink redhat-logos rootfiles selinux-policy selinux-policy-targeted setools setserial sysfsutils sysklogd udftools xe-guest-utilities xen-libs yum-fastestmirror
+rpm --erase --nodeps --allmatches audit-libs-python checkpolicy dhcpv6-client libselinux-python libselinux-utils libsemanage policycoreutils prelink redhat-logos rootfiles selinux-policy selinux-policy-targeted setools setserial sysfsutils sysklogd udftools yum-fastestmirror
+rpm --erase --nodeps kernel-xen-2.6.18-164.15.1.el5.centos.plus kernel-headers-2.6.18-164.15.1.el5.centos.plus
 yum -y clean all
 yum -y update
 
@@ -36,6 +37,9 @@ chkconfig --level 2345 syslog-ng on
 authconfig --enableshadow --useshadow --enablemd5 --updateall
 
 mv -f /root/files/sshd_config /etc/ssh
+
+# Add IPtables rules for HTTP (TCP 80) and HTTPS (TCP 443)
+sed -i '/^-A RH-Firewall-1-INPUT -j REJECT/i -A RH-Firewall-1-INPUT -p tcp -m tcp --dport 80 -j ACCEPT\n-A RH-Firewall-1-INPUT -p tcp -m tcp --dport 443 -j ACCEPT' /etc/sysconfig/iptables
 
 #
 # Java configuration steps
@@ -72,7 +76,8 @@ chmod +x /etc/profile.d/java.sh
 #
 # Download RightLink
 #
-wget http://ec2-us-east-mirror.rightscale.com/rightlink/5.6.28/centos/rightscale_5.6.28-centos_5.4-x86_64.rpm
+#wget http://ec2-us-east-mirror.rightscale.com/rightlink/5.6.28/centos/rightscale_5.6.28-centos_5.4-x86_64.rpm
+wget https://s3.amazonaws.com/rightscale_rightlink/5.6.29/rightscale_5.6.29-centos_5.4-x86_64.rpm
 
 #
 # Install any RPMs

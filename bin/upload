@@ -3,9 +3,9 @@
 # Upload everything to a vanilla Rackspace image
 # prior to setup.
 #
-# Syntax: rackspace_upload.sh <server_address>
+# Syntax: rackspace_upload.sh <server_address> <distro>
 #
 # cary@rightscale.com
 #
-
-puts `scp -r centos/* root@#{ARGV[0]}:/root/`
+raise "Specify distro as: centos or ubuntu" unless ARGV[1]
+puts `scp -r #{ARGV[1]}/* packagediff.sh root@#{ARGV[0]}:/root/`

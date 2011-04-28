@@ -1,0 +1,16 @@
+deb http://ec2-us-east-mirror.rightscale.com/ubuntu_daily/latest lucid main restricted multiverse universe
+deb http://ec2-us-east-mirror.rightscale.com/ubuntu_daily/latest lucid-updates main restricted multiverse universe
+deb http://ec2-us-east-mirror.rightscale.com/ubuntu_daily/latest lucid-security main restricted multiverse universe
+
+deb http://ec2-us-east-mirror1.rightscale.com/ubuntu_daily/latest lucid main restricted multiverse universe
+deb http://ec2-us-east-mirror1.rightscale.com/ubuntu_daily/latest lucid-updates main restricted multiverse universe
+deb http://ec2-us-east-mirror1.rightscale.com/ubuntu_daily/latest lucid-security main restricted multiverse universe
+
+deb http://ec2-us-east-mirror2.rightscale.com/ubuntu_daily/latest lucid main restricted multiverse universe
+deb http://ec2-us-east-mirror2.rightscale.com/ubuntu_daily/latest lucid-updates main restricted multiverse universe
+deb http://ec2-us-east-mirror2.rightscale.com/ubuntu_daily/latest lucid-security main restricted multiverse universe
+
+deb http://ec2-us-east-mirror3.rightscale.com/ubuntu_daily/latest lucid main restricted multiverse universe
+deb http://ec2-us-east-mirror3.rightscale.com/ubuntu_daily/latest lucid-updates main restricted multiverse universe
+deb http://ec2-us-east-mirror3.rightscale.com/ubuntu_daily/latest lucid-security main restricted multiverse universe
+
