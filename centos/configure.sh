@@ -37,6 +37,9 @@ authconfig --enableshadow --useshadow --enablemd5 --updateall
 
 mv -f /root/files/sshd_config /etc/ssh
 
+# Add IPtables rules for HTTP (TCP 80) and HTTPS (TCP 443)
+sed -i '/^-A RH-Firewall-1-INPUT -j REJECT/i -A RH-Firewall-1-INPUT -p tcp -m tcp --dport 80 -j ACCEPT\n-A RH-Firewall-1-INPUT -p tcp -m tcp --dport 443 -j ACCEPT' /etc/sysconfig/iptables
+
 #
 # Java configuration steps
 # (Should really be factored out-- use real chef imagebuilder scripts instead?)
