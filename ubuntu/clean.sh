@@ -45,6 +45,11 @@ mkdir /tmp/agent-smith
 find /var/log -type f -exec rm -f {} \;
 
 rm -rf /var/cache/*
+
+# Rebuild Apt cache
+mkdir -p /var/cache/apt/archives/partial /var/cache/debconf
+apt-cache gencaches
+
 rm -rf /var/mail/*
 rm -rf /root/.cache
 
