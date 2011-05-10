@@ -76,7 +76,16 @@ chmod +x /etc/profile.d/java.sh
 # Download RightLink
 #
 #wget http://ec2-us-east-mirror.rightscale.com/rightlink/5.6.28/centos/rightscale_5.6.28-centos_5.4-x86_64.rpm
-wget https://s3.amazonaws.com/rightscale_rightlink/5.6.29/rightscale_5.6.29-centos_5.4-x86_64.rpm
+#wget https://s3.amazonaws.com/rightscale_rightlink/5.6.29/rightscale_5.6.29-centos_5.4-x86_64.rpm
+mkdir /root/.rightscale
+cd /root/.rightscale
+wget https://s3.amazonaws.com/rightscale_rightlink_dev/rightscale_5.6.29-centos_5.4-x86_64.rpm
+chmod 0770 /root/.rightscale
+chmod 0440 /root/.rightscale/*
+
+# Install seed script
+install /root/files/rightimage /etc/init.d/rightimage --mode=0755
+chkconfig --add rightimage
 
 #
 # Install any RPMs
