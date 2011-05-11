@@ -73,17 +73,18 @@ echo "export JAVA_HOME=/usr/java/default" >> /etc/profile.d/java.sh
 chmod +x /etc/profile.d/java.sh
 
 #
-# Download RightLink
+# Download RightLink (unless skipped)
 #
-#wget http://ec2-us-east-mirror.rightscale.com/rightlink/5.6.28/centos/rightscale_5.6.28-centos_5.4-x86_64.rpm
-#wget https://s3.amazonaws.com/rightscale_rightlink/5.6.29/rightscale_5.6.29-centos_5.4-x86_64.rpm
+RIGHT_LINK_VERSION="5.6.29"
+RIGHT_LINK_BUCKET="rightscale_rightlink_dev"
 mkdir /root/.rightscale
 cd /root/.rightscale
-wget https://s3.amazonaws.com/rightscale_rightlink_dev/rightscale_5.6.29-centos_5.4-x86_64.rpm
+wget https://s3.amazonaws.com/$RIGHT_LINK_BUCKET/rightscale_$RIGHT_LINK_VERSION-centos_5.4-x86_64.rpm
+echo $RIGHT_LINK_VERSION > /etc/rightscale.d/rightscale-release
 chmod 0770 /root/.rightscale
 chmod 0440 /root/.rightscale/*
-
-# Install seed script
+cd -
+# Install RightLink seed script
 install /root/files/rightimage /etc/init.d/rightimage --mode=0755
 chkconfig --add rightimage
 
@@ -122,6 +123,12 @@ service messagebus stop
 # Boot fast
 #
 touch /fastboot
+
+#
+# setup hostname
+#
+echo "localhost" > /etc/hostname
+echo "127.0.0.1   localhost   localhost.localdomain" > /etc/hosts
 
 #
 # Cleanup
