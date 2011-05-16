@@ -13,14 +13,17 @@ clean()
 #
 # /etc/rightscale.d files
 #
+cp /etc/rightscale.d/rightscale-release /tmp/rightscale-release
 rm -rf /etc/rightscale.d
 mkdir /etc/rightscale.d
 echo -n "rackspace" > /etc/rightscale.d/cloud
+cp /tmp/rightscale-release /etc/rightscale.d/rightscale-release 
 
 #
 # /root
 #
 rm -rf /root/.ssh
+rm -rf /root/.gem
 
 #
 # /etc
@@ -52,3 +55,8 @@ find /etc -name \*.backup* -exec rm -- {} \;
 
 rm -rf /root/files
 rm /root/*.sh
+
+#
+# dot files
+#
+rm -f /root/*.tar /root/.*

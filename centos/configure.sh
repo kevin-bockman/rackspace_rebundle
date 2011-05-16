@@ -135,7 +135,6 @@ echo "127.0.0.1   localhost   localhost.localdomain" > /etc/hosts
 #
 rm -rf /tmp/updates
 mv /root/*.rpm /root/.rightscale/
-rm -f /root/*.tar /root/.*
 mv /root/.rightscale/.bashrc /root/.rightscale/.bash_profile /root
 rm /root/install.log /root/install.log.syslog
 echo "You will need to manually delete any files left in /root."
