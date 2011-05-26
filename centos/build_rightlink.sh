@@ -1,8 +1,8 @@
 #!/bin/bash -ex
 
-RIGHT_LINK_PACKAGE_TAG="rightlink_package_5.6.30"
+RIGHT_LINK_PACKAGE_TAG="rightlink_package_5.6.32"
 ARCH="x86_64"
-RIGHT_LINK_VERSION="5.6.30"
+RIGHT_LINK_VERSION="5.6.32"
 PACKAGE_BUCKET="rightscale_rightlink_dev"
 
 yum -y install rubygems 

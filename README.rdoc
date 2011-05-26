@@ -4,6 +4,7 @@ This project is a set of simple scripts to take Rackspace base images and bundle
 to be RightScale quality RightImages that can be used with the RightScale dashboard
 or without.
 
+
 === CentOS Instructions
 
 Launch CentOS base image by running: 
@@ -24,6 +25,17 @@ Finally, cleanup image before rebundle:
 
 Then create new "image on demand" using the Rackspace dashboard.
 
+
+== Building RightLink
+
+At this point, the binaries used to create a RightLink rpm are in a private repo.
+You need to install your private github key before running the build script
+
+  > vim .ssh/id_rsa
+  > chmod 600 .ssh/id_rsa 
+  > ./build_rightlink.sh
+  
+Once the repo is made public this will be easier.
 
 
 == LICENSE AND AUTHOR

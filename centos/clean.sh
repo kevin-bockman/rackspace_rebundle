@@ -22,8 +22,20 @@ cp /tmp/rightscale-release /etc/rightscale.d/rightscale-release
 #
 # /root
 #
+cp /root/.bashrc /tmp/.bashrc
+cp /root/.bash_logout /tmp/.bashrc
+cp /root/.bash_profile /tmp/.bash_profile
+
 rm -rf /root/.ssh
 rm -rf /root/.gem
+rm -f /root/*.tar
+rm -f /root/*.
+rm -rf /root/files
+rm -f /root/*
+
+cp /tmp/.bashrc /root/.bashrc
+cp /tmp/.bash_logout /root/.bashrc
+cp /tmp/.bash_profile /root/.bash_profile
 
 #
 # /etc
@@ -41,6 +53,7 @@ yum -y clean all
 rm -f /var/spool/cloud/*
 rm -rf /tmp/* /tmp/.*
 mkdir /tmp/agent-smith
+rm -rf /var/cache/*
 
 #
 # Log files
@@ -53,10 +66,4 @@ rm -rf /var/mail/*
 find /etc -name \*~ -exec rm -- {} \;
 find /etc -name \*.backup* -exec rm -- {} \;
 
-rm -rf /root/files
-rm /root/*.sh
 
-#
-# dot files
-#
-rm -f /root/*.tar /root/.*
