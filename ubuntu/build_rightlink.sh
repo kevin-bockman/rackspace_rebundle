@@ -1,11 +1,11 @@
 #!/bin/bash -ex
 
-RIGHT_LINK_PACKAGE_TAG="rightlink_package_5.6.32"
+RIGHT_LINK_PACKAGE_TAG="rightlink_package_5.6.34"
 ARCH="x86_64"
-RIGHT_LINK_VERSION="5.6.32"
+RIGHT_LINK_VERSION="5.6.34"
 PACKAGE_BUCKET="rightscale_rightlink_dev"
 
-yum -y install rubygems 
+apt-get install rubygems 
 gem install --remote rake
 
 if [ -d /opt/rightscale/sandbox ]; then mv /opt/rightscale/sandbox /opt/rightscale/sandbox.OLD; fi
@@ -23,11 +23,11 @@ cd ../..
 export ARCH=$ARCH
 export RS_VERSION=$RIGHT_LINK_VERSION
 rake submodules:sandbox:create
-rake right_link:rpm:build
+rake right_link:deb:build
 
 rm -rf /root/.rightscale
 mkdir /root/.rightscale
-cp dist/*.rpm /root/.rightscale
+cp dist/*.deb /root/.rightscale
 echo $RIGHT_LINK_VERSION > /etc/rightscale.d/rightscale-release
 chmod 0770 /root/.rightscale
 chmod 0440 /root/.rightscale/*
