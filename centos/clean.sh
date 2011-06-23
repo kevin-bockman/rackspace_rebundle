@@ -20,6 +20,11 @@ echo -n "rackspace" > /etc/rightscale.d/cloud
 cp /tmp/rightscale-release /etc/rightscale.d/rightscale-release 
 
 #
+# meta and user data
+#
+rm -rf /var/spool/rightscale 
+
+#
 # /root
 #
 cp /root/.bashrc /tmp/.bashrc
