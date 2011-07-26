@@ -1,12 +1,12 @@
 #!/bin/bash -ex
 
-RIGHT_LINK_PACKAGE_TAG="rightlink_package_5.6.32"
-ARCH="x86_64"
-RIGHT_LINK_VERSION="5.6.32"
+RIGHT_LINK_PACKAGE_TAG="rightlink_package_5.6.35"
+ARCH=`uname -i`
+RIGHT_LINK_VERSION="5.6.35"
 PACKAGE_BUCKET="rightscale_rightlink_dev"
 
 yum -y install rubygems 
-gem install --remote rake
+gem install --remote rake -v 0.8.7 --no-rdoc --no-ri # 0.9.x requires rubygems >= 1.3.2 which isn't available on CentOS 5
 
 if [ -d /opt/rightscale/sandbox ]; then mv /opt/rightscale/sandbox /opt/rightscale/sandbox.OLD; fi
 cd /tmp

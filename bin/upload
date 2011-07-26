@@ -1,11 +1,14 @@
 #!/usr/bin/env ruby
 #
-# Upload everything to a vanilla Rackspace image
+# Upload everything to a vanilla image
 # prior to setup.
 #
-# Syntax: rackspace_upload.sh <server_address> <distro>
+# Syntax: upload <server_address> <distro> <ssh_key>
 #
 # cary@rightscale.com
 #
-raise "Specify distro as: centos or ubuntu" unless ARGV[1]
-puts `scp -r #{ARGV[1]}/* packagediff.sh root@#{ARGV[0]}:/root/`
+raise "Specify distro as: centos, redhat, or ubuntu" unless ARGV[1]
+key=""
+key="-i #{ARGV[2]}" if ARGV[2]
+
+puts `scp #{key} -r #{ARGV[1]}/* packagediff.sh root@#{ARGV[0]}:/root/`
