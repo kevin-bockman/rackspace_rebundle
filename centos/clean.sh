@@ -56,7 +56,6 @@ find /etc -name \*.backup* -exec rm -- {} \;
 rm -rf /root/.ssh
 rm -rf /root/.gem
 rm -f /root/*.tar
-cp /root/files/.* /root
 rm -rf /root/files
 rm -f /root/*
 rm -f /root/.bash_history /root/.vim* /root/.lesshst

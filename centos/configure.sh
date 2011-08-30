@@ -6,15 +6,15 @@
 mkdir -p /tmp/updates
 
 cd /root
-# Dot files get removed somewhere in here...
-cp -f .??* /root/files
+[ -d "/root/.rightscale" ] && rm -rf /root/.rightscale
 
 mkdir -p /etc/rightscale.d
 echo -n rackspace > /etc/rightscale.d/cloud
 mkdir -p /root/.rightscale
 cp /root/files/EPEL.pubkey /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
 rm -rf /etc/yum.repos.d
-tar xvf /root/files/rs_yum.repos.d.tar -C /
+mkdir /etc/yum.repos.d
+cp /root/files/*.repo /etc/yum.repos.d
 
 #
 # Install packages
@@ -23,10 +23,11 @@ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
 yum -y clean all
 yum -y makecache
 yum -y groupinstall Base
-yum -y install git bind-utils redhat-lsb parted xfsprogs ruby syslog-ng wget mlocate nano logrotate ruby ruby-devel ruby-docs ruby-irb ruby-libs ruby-mode ruby-rdoc ruby-ri ruby-tcltk postfix openssl openssh openssh-askpass openssh-clients openssh-server curl gcc* zip unzip bison flex compat-libstdc++-296 cvs subversion autoconf automake libtool compat-gcc-34-g77 mutt sysstat rpm-build fping vim-common vim-enhanced rrdtool-1.2.27 rrdtool-devel-1.2.27 rrdtool-doc-1.2.27 rrdtool-perl-1.2.27 rrdtool-python-1.2.27 rrdtool-ruby-1.2.27 rrdtool-tcl-1.2.27 pkgconfig lynx screen yum-utils bwm-ng createrepo redhat-rpm-config git nscd xfsprogs swig rubygems
-yum -y remove bluez* gnome-bluetooth* cpuspeed irqbalance kudzu acpid NetworkManager wpa_supplicant
+yum -y install git bind-utils redhat-lsb parted xfsprogs ruby syslog-ng wget mlocate nano logrotate ruby ruby-devel ruby-docs ruby-irb ruby-libs ruby-mode ruby-rdoc ruby-ri ruby-tcltk postfix openssl openssh openssh-askpass openssh-clients openssh-server curl gcc* zip unzip bison flex compat-libstdc++-296 cvs subversion autoconf automake libtool compat-gcc-34-g77 mutt sysstat rpm-build fping vim-common vim-enhanced rrdtool-1.2.27 rrdtool-devel-1.2.27 rrdtool-doc-1.2.27 rrdtool-perl-1.2.27 rrdtool-python-1.2.27 rrdtool-ruby-1.2.27 rrdtool-tcl-1.2.27 pkgconfig lynx screen yum-utils bwm-ng createrepo redhat-rpm-config git xfsprogs swig rubygems # nscd
+# TODO: NSCD removed due to causing non-resolution of DNS issues on CentOS 5.6
+yum -y remove bluez* gnome-bluetooth* cpuspeed irqbalance kudzu acpid NetworkManager wpa_supplicant kernel-xen-`uname -r`
 
-array=( audit-libs-python checkpolicy dhcpv6-client libselinux-python libselinux-utils libsemanage policycoreutils prelink redhat-logos rootfiles selinux-policy selinux-policy-targeted setools setserial sysfsutils sysklogd udftools yum-fastestmirror avahi avahi-compat-libdns_sd cups );
+array=( audit-libs-python checkpolicy dhcpv6-client libselinux-python libselinux-utils libsemanage policycoreutils prelink redhat-logos selinux-policy selinux-policy-targeted setools setserial sysfsutils sysklogd udftools yum-fastestmirror avahi avahi-compat-libdns_sd cups nscd );
 
 set +e
 for i in "${array[@]}"; do 
@@ -40,7 +41,7 @@ yum -y update
 #
 # Configuration steps
 #
-chkconfig --level 2345 nscd on
+#chkconfig --level 2345 nscd on
 chkconfig --level 2345 syslog-ng on
 authconfig --enableshadow --useshadow --enablemd5 --updateall
 
@@ -57,24 +58,14 @@ else
   java_arch="i586"
 fi
 
-curl -o /tmp/updates/jdk-6u14-linux-$java_arch.rpm https://s3.amazonaws.com/rightscale_software/java/jdk-6u14-linux-$java_arch.rpm
-curl -o /tmp/updates/sun-javadb-common-10.4.2-1.1.i386.rpm https://s3.amazonaws.com/rightscale_software/java/sun-javadb-common-10.4.2-1.1.i386.rpm
-curl -o /tmp/updates/sun-javadb-client-10.4.2-1.1.i386.rpm https://s3.amazonaws.com/rightscale_software/java/sun-javadb-client-10.4.2-1.1.i386.rpm
-curl -o /tmp/updates/sun-javadb-core-10.4.2-1.1.i386.rpm https://s3.amazonaws.com/rightscale_software/java/sun-javadb-core-10.4.2-1.1.i386.rpm
-curl -o /tmp/updates/sun-javadb-demo-10.4.2-1.1.i386.rpm https://s3.amazonaws.com/rightscale_software/java/sun-javadb-demo-10.4.2-1.1.i386.rpm
-curl -o /tmp/updates/sun-javadb-docs-10.4.2-1.1.i386.rpm https://s3.amazonaws.com/rightscale_software/java/sun-javadb-docs-10.4.2-1.1.i386.rpm
-curl -o /tmp/updates/sun-javadb-javadoc-10.4.2-1.1.i386.rpm https://s3.amazonaws.com/rightscale_software/java/sun-javadb-javadoc-10.4.2-1.1.i386.rpm
-
-#Install RPM's
+array=( jdk-6u27-linux-$java_arch.rpm sun-javadb-common-10.4.2-1.1.i386.rpm sun-javadb-client-10.4.2-1.1.i386.rpm sun-javadb-core-10.4.2-1.1.i386.rpm sun-javadb-demo-10.4.2-1.1.i386.rpm )
 set +e
-rpm -Uvh /tmp/updates/jdk-6u14-linux-$java_arch.rpm
-
-rpm -Uvh /tmp/updates/sun-javadb-common-10.4.2-1.1.i386.rpm
-rpm -Uvh /tmp/updates/sun-javadb-client-10.4.2-1.1.i386.rpm
-rpm -Uvh /tmp/updates/sun-javadb-core-10.4.2-1.1.i386.rpm
-rpm -Uvh /tmp/updates/sun-javadb-demo-10.4.2-1.1.i386.rpm
-rpm -Uvh /tmp/updates/sun-javadb-docs-10.4.2-1.1.i386.rpm
-rpm -Uvh /tmp/updates/sun-javadb-javadoc-10.4.2-1.1.i386.rpm
+for i in "${array[@]}"; do
+  ret=$(rpm -ivh http://s3.amazonaws.com/rightscale_software/java/$i 2>&1)
+  [ "$?" == "0" ] && continue
+  echo "$ret" | grep "already installed"
+  [ "$?" != "0" ] && exit 1
+done
 set -e
 
 echo "export JAVA_HOME=/usr/java/default" >> /etc/profile.d/java.sh
@@ -83,10 +74,10 @@ chmod +x /etc/profile.d/java.sh
 #
 # Download RightLink (unless skipped)
 #
-RIGHT_LINK_VERSION="5.6.35"
-RIGHT_LINK_BUCKET="rightscale_rightlink"
-FILE="rightscale_$RIGHT_LINK_VERSION-centos_5.4-x86_64.rpm"
-curl -o /root/.rightscale/$FILE https://s3.amazonaws.com/$RIGHT_LINK_BUCKET/$RIGHT_LINK_VERSION/centos/$FILE
+RIGHT_LINK_VERSION="5.7.14"
+RIGHT_LINK_BUCKET="rightscale_rightlink_dev"
+FILE="rightscale_$RIGHT_LINK_VERSION-centos_`lsb_release -rs`-`uname -i`.rpm"
+curl --fail -o /root/.rightscale/$FILE https://s3.amazonaws.com/$RIGHT_LINK_BUCKET/$RIGHT_LINK_VERSION/centos/$FILE
 echo $RIGHT_LINK_VERSION > /etc/rightscale.d/rightscale-release
 chmod 0770 /root/.rightscale
 chmod 0440 /root/.rightscale/*
@@ -135,6 +126,16 @@ touch /fastboot
 #
 echo "localhost" > /etc/hostname
 echo "127.0.0.1   localhost   localhost.localdomain" > /etc/hosts
+# ensure newline at end of resolv.conf
+echo "" >> /etc/resolv.conf
+
+set +e
+file="/etc/sysconfig/network"
+grep "HOSTNAME=localhost" $file
+if [ "$?" == "1" ]; then
+  sed -i "s/^HOSTNAME=.*/HOSTNAME=localhost/" $file
+fi
+set -e
 
 #
 #
