@@ -1,0 +1,8 @@
+default 0
+timeout 5
+hiddenmenu
+
+title Ubuntu 10.04 LTS
+root (hd0,0)
+kernel /boot/vmlinuz-2.6.35-25-server root=/dev/sda1 ro  
+initrd /boot/initrd.img-2.6.35-25-server

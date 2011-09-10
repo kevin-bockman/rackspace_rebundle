@@ -1,0 +1,21 @@
+#!/usr/bin/expect -f
+
+# exp_internal 1 # Debugging
+
+set fp_host [open "rax_hostname" r]
+set host [read $fp_host]
+close $fp_host
+
+set fp [open "rax_password" r]
+set pass [read $fp]
+close $fp
+
+spawn ssh root@$host mkdir /root/.ssh
+expect "word:"
+send "$pass\r"
+expect eof
+
+spawn scp /root/.ssh/authorized_keys root@$host:.ssh
+expect "word:"
+send "$pass\r"
+expect eof

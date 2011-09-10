@@ -48,9 +48,20 @@ class Object
   end
 end
 
+# TODO: Automatically launch upload after build is complete.
 # Create new server using given image_id
 rackspace_api = ::Rightscale::Rackspace::Interface::new(account, token ,:verbose_errors => true)
 data = rackspace_api.create_server(:name => server[:name], :image_id => server[:image_id], :flavor_id => server[:flavor_id] )
 
 # Display info - like public IP addr and passwd
 pp data
+
+hostname_path = File.join(File.dirname(__FILE__), "..", "rax_hostname")
+File.open(hostname_path, "w") do |file|
+  file.write data["server"]["addresses"]["public"].first
+end
+
+password_path = File.join(File.dirname(__FILE__), "..", "rax_password")
+File.open(password_path, "w") do |file|
+  file.write data["server"]["adminPass"]
+end

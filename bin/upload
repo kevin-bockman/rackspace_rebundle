@@ -7,5 +7,45 @@
 #
 # cary@rightscale.com
 #
-raise "Specify distro as: centos or ubuntu" unless ARGV[1]
-puts `scp -r #{ARGV[1]}/* packagediff.sh root@#{ARGV[0]}:/root/`
+require 'fileutils'
+
+def execute(command)
+  puts "running: #{command}"
+  result = `#{command}`
+  puts result
+  raise "FATAL: #{command} failed" unless $?.success?
+  result
+end
+
+rightlink_ver = ARGV[0]
+raise "FATAL: Must specify RightLink version" unless rightlink_ver
+
+puts "Installing depenencies..."
+puts `apt-get -y install expect`
+
+puts "Installing SSH key..."
+drop = File.join(File.dirname(__FILE__), "sshkeydrop.expect")
+puts `#{drop}`
+
+hostname_path = File.join(File.dirname(__FILE__), "..", "rax_hostname")
+hostname = IO.read hostname_path
+
+#raise "Specify distro as: centos or ubuntu" unless ARGV[1]
+puts "Copying files..."
+distro = execute("ssh -q root@#{hostname} lsb_release -is").chomp.downcase
+execute("scp -r #{distro}/* default/* packagediff.sh root@#{hostname}:/root/")
+
+puts "Checking out RightLink repo..."
+FileUtils.rm_rf "sandbox_builds" if File.exists? "sandbox_builds"
+execute("git clone git@github.com:rightscale/sandbox_builds.git")
+Dir.chdir("sandbox_builds")
+execute("git reset rightlink_package_#{rightlink_ver} --hard")
+execute("git submodule init")
+execute("git submodule update")
+Dir.chdir("repos/right_net")
+execute("git submodule init")
+execute("git submodule update")
+Dir.chdir("../../..")
+execute("ssh root@#{hostname} apt-get -y install rsync") if distro == "ubuntu"
+execute("rsync -avz --exclude=.git sandbox_builds root@#{hostname}:/tmp")
+execute("ssh -q root@#{hostname} bash -ex /root/configure.sh #{rightlink_ver}") 
