@@ -59,6 +59,9 @@ if [ "$os" == "ubuntu" ]; then
   # Rebuild Apt cache
   mkdir -p /var/cache/apt/archives/partial /var/cache/debconf
   apt-cache gencaches
+
+  # Create man cache
+  mandb --create
 fi
 
 #

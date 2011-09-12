@@ -11,22 +11,30 @@
 require "rubygems"
 require "right_rackspace"
 require "pp"
+require "trollop"
 
-name = ARGV[0]
-image_id = ARGV[1]
-flavor_id = ARGV[2]
+opts = Trollop::options do
+  banner <<-EOS
+  EOS
 
-unless name && image_id
-  puts "Syntax: launch <server_name> <image_id>" 
-  exit 1
+  opt :hostname, "Server hostname", :type => String, :default => "localhost"
+  opt :image_id, "Image ID", :type => Integer, :required => true
+  opt :flavor_id, "Flavor ID (Instance size)", :type => Integer, :default => 1
+  opt :no_checkout, "Don't checkout RightLink repo"
+  opt :no_configure, "Don't automatically run configure script"
+  opt :no_auto, "Don't automatically build when server is ready"
+  opt :rightlink, "RightLink version", :type => String
 end
+Trollop::die :rightlink, "must be specified" unless (opts[:no_checkout] || opts[:no_configure] || opts[:no_auto])
+
+name = opts[:hostname]
+image_id = opts[:image_id]
+flavor_id = opts[:flavor_id]
 
 # flavor_id.  This is what rackspace calls their instace sizes.
 # NOTE: if you choose a larger flavor, then new VMs 
 # must use same size or larger. Smaller sizes will fail.
 # So it is recommended that you leave it alone if possible.
-flavor_id = flavor_id || 1  # 256M
-
 
 account = ENV["RACKSPACE_ACCOUNT"]
 token = ENV["RACKSPACE_API_TOKEN"]
@@ -64,4 +72,24 @@ end
 password_path = File.join(File.dirname(__FILE__), "..", "rax_password")
 File.open(password_path, "w") do |file|
   file.write data["server"]["adminPass"]
+end
+
+unless opts[:no_auto]
+  sleep 180
+  begin
+    puts "DEBUG: DATA: #{data}"
+    puts "DEBUG: DATA ID: #{data["server"]["id"]}"
+    
+    state = rackspace_api.get_server(data["server"]["id"])["server"]["status"]
+    puts "Server status: #{state}"
+    sleep 30 unless state == "ACTIVE"
+  end while state != "ACTIVE"
+
+  command = "bin/upload"
+  flags = ""
+  flags += "--rightlink #{opts[:rightlink]} " if opts[:rightlink]
+  flags += "--no-checkout " if opts[:no_checkout]
+  flags += "--no-configure " if opts[:no_configure] 
+  puts "Server build complete.  Running command: #{command} with flags: #{flags}"
+  puts `#{command} #{flags}`
 end

@@ -7,7 +7,19 @@
 #
 # cary@rightscale.com
 #
+require 'rubygems'
 require 'fileutils'
+require 'trollop'
+
+opts = Trollop::options do
+  banner <<-EOS
+  EOS
+
+  opt :rightlink, "RightLink version", :type => String
+  opt :no_checkout, "Don't checkout RightLink repo"
+  opt :no_configure, "Don't automatically run configure script"
+end
+Trollop::die :rightlink, "must be specified" unless opts[:no_checkout] || opts[:no_configure]
 
 def execute(command)
   puts "running: #{command}"
@@ -17,8 +29,7 @@ def execute(command)
   result
 end
 
-rightlink_ver = ARGV[0]
-raise "FATAL: Must specify RightLink version" unless rightlink_ver
+rightlink_ver = opts[:rightlink]
 
 puts "Installing depenencies..."
 puts `apt-get -y install expect`
@@ -30,22 +41,28 @@ puts `#{drop}`
 hostname_path = File.join(File.dirname(__FILE__), "..", "rax_hostname")
 hostname = IO.read hostname_path
 
-#raise "Specify distro as: centos or ubuntu" unless ARGV[1]
 puts "Copying files..."
 distro = execute("ssh -q root@#{hostname} lsb_release -is").chomp.downcase
 execute("scp -r #{distro}/* default/* packagediff.sh root@#{hostname}:/root/")
 
-puts "Checking out RightLink repo..."
-FileUtils.rm_rf "sandbox_builds" if File.exists? "sandbox_builds"
-execute("git clone git@github.com:rightscale/sandbox_builds.git")
-Dir.chdir("sandbox_builds")
-execute("git reset rightlink_package_#{rightlink_ver} --hard")
-execute("git submodule init")
-execute("git submodule update")
-Dir.chdir("repos/right_net")
-execute("git submodule init")
-execute("git submodule update")
-Dir.chdir("../../..")
+# TODO: Check if package exists
+unless opts[:no_checkout]
+  puts "Checking out RightLink repo..."
+  FileUtils.rm_rf "sandbox_builds" if File.exists? "sandbox_builds"
+  execute("git clone git@github.com:rightscale/sandbox_builds.git")
+  Dir.chdir("sandbox_builds")
+  execute("git reset rightlink_package_#{rightlink_ver} --hard")
+  execute("git submodule init")
+  execute("git submodule update")
+  Dir.chdir("repos/right_net")
+  execute("git submodule init")
+  execute("git submodule update")
+  Dir.chdir("../../..")
+end
+
 execute("ssh root@#{hostname} apt-get -y install rsync") if distro == "ubuntu"
 execute("rsync -avz --exclude=.git sandbox_builds root@#{hostname}:/tmp")
-execute("ssh -q root@#{hostname} bash -ex /root/configure.sh #{rightlink_ver}") 
+
+unless opts[:no_configure]
+  execute("ssh -q root@#{hostname} bash -ex /root/configure.sh #{rightlink_ver}") 
+end

@@ -21,7 +21,7 @@ download() {
   
   rightlink_file="rightscale_${rightlink_ver}-${rightlink_os}_${rightlink_os_ver}-${rightlink_arch}.${rightlink_pkg}" 
   buckets=( rightscale_rightlink rightscale_rightlink_dev )
-  locations=( $rightlink_ver/$rightlink_os $rightlink_ver / )
+  locations=( /$rightlink_ver/$rightlink_os/ /$rightlink_ver/ / )
 
   [ -f /root/.rightscale/$rightlink_file ] && return 0
  
@@ -30,7 +30,7 @@ download() {
   do
     for location in ${locations[@]}
     do
-      code=$(curl -o /root/.rightscale/${rightlink_file} --connect-timeout 10 --fail --silent --write-out %{http_code} http://s3.amazonaws.com/$bucket/$location/${rightlink_file})
+      code=$(curl -o /root/.rightscale/${rightlink_file} --connect-timeout 10 --fail --silent --write-out %{http_code} http://s3.amazonaws.com/$bucket$location${rightlink_file})
       return=$?
       echo "BUCKET: $bucket LOCATION: $location RETURN: $return CODE: $code"
       [[ "$return" -eq "0" && "$code" -eq "200" ]] && break 2
@@ -39,21 +39,6 @@ download() {
 
   if [ "$?" == "0" ]; then
     set -e
-    # Install RightLink seed script
-    install /tmp/sandbox_builds/seed_scripts/rightimage /etc/init.d/rightimage --mode=0755
-
-    case $rightlink_os in
-    "centos")
-      agent="nova-agent"
-      chkconfig --add rightimage
-      ;;
-    "ubuntu")
-      agent="agent-smith"
-      update-rc.d rightimage defaults
-      ;;
-    esac
-
-    sed -i "s/amazon$/${agent}/g" /etc/init.d/rightimage
     post
     return 0
   fi
@@ -95,4 +80,20 @@ post() {
   echo $rightlink_ver > /etc/rightscale.d/rightscale-release
   chmod 0770 /root/.rightscale
   chmod 0440 /root/.rightscale/*
+
+  # Install RightLink seed script
+  install /tmp/sandbox_builds/seed_scripts/rightimage /etc/init.d/rightimage --mode=0755
+
+  case $rightlink_os in
+  "centos")
+    agent="nova-agent"
+    chkconfig --add rightimage
+    ;;
+  "ubuntu")
+    agent="agent-smith"
+    update-rc.d rightimage start 96 2 3 4 5 . stop 1 0 1 6 .
+    ;;
+  esac
+
+  sed -i "s/amazon$/${agent}/g" /etc/init.d/rightimage
 }
