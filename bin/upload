@@ -3,7 +3,7 @@
 # Upload everything to a vanilla Rackspace image
 # prior to setup.
 #
-# Syntax: rackspace_upload.sh <server_address> <distro>
+# Syntax: upload --rightlink X.X.X 
 #
 # cary@rightscale.com
 #
@@ -19,7 +19,7 @@ opts = Trollop::options do
   opt :no_checkout, "Don't checkout RightLink repo"
   opt :no_configure, "Don't automatically run configure script"
 end
-Trollop::die :rightlink, "must be specified" unless opts[:no_checkout] || opts[:no_configure]
+Trollop::die :rightlink, "must be specified" unless opts[:rightlink] || (opts[:no_checkout] && opts[:no_configure])
 
 def execute(command)
   puts "running: #{command}"
@@ -63,6 +63,11 @@ end
 execute("ssh root@#{hostname} apt-get -y install rsync") if distro == "ubuntu"
 execute("rsync -avz --exclude=.git sandbox_builds root@#{hostname}:/tmp")
 
-unless opts[:no_configure]
-  execute("ssh -q root@#{hostname} bash -ex /root/configure.sh #{rightlink_ver}") 
+if opts[:no_configure]
+  password_path = File.join(File.dirname(__FILE__), "..", "rax_password")
+  password = IO.read password_path
+
+  puts "IP: #{hostname} PASSWORD: #{password}"
+else
+  execute("ssh root@#{hostname} /root/configure.sh #{rightlink_ver}") 
 end

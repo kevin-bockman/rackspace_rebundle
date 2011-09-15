@@ -2,7 +2,7 @@
 #
 # Launch a Rackspace server via API using image_id
 #
-# Syntax: launch <server_name> <image_id>
+# Syntax: launch --image-id X --rightlink X.X.X
 #
 # NOTE: you must set RACKSPACE_ACCOUNT and RACKSPACE_API_TOKEN in your environment.
 #
@@ -22,10 +22,10 @@ opts = Trollop::options do
   opt :flavor_id, "Flavor ID (Instance size)", :type => Integer, :default => 1
   opt :no_checkout, "Don't checkout RightLink repo"
   opt :no_configure, "Don't automatically run configure script"
-  opt :no_auto, "Don't automatically build when server is ready"
+  opt :no_auto, "Don't automatically upload and/or build when server is ready"
   opt :rightlink, "RightLink version", :type => String
 end
-Trollop::die :rightlink, "must be specified" unless (opts[:no_checkout] || opts[:no_configure] || opts[:no_auto])
+Trollop::die :rightlink, "must be specified" unless opts[:rightlink] || (opts[:no_checkout] && opts[:no_configure])
 
 name = opts[:hostname]
 image_id = opts[:image_id]
@@ -56,7 +56,6 @@ class Object
   end
 end
 
-# TODO: Automatically launch upload after build is complete.
 # Create new server using given image_id
 rackspace_api = ::Rightscale::Rackspace::Interface::new(account, token ,:verbose_errors => true)
 data = rackspace_api.create_server(:name => server[:name], :image_id => server[:image_id], :flavor_id => server[:flavor_id] )
@@ -77,9 +76,6 @@ end
 unless opts[:no_auto]
   sleep 180
   begin
-    puts "DEBUG: DATA: #{data}"
-    puts "DEBUG: DATA ID: #{data["server"]["id"]}"
-    
     state = rackspace_api.get_server(data["server"]["id"])["server"]["status"]
     puts "Server status: #{state}"
     sleep 30 unless state == "ACTIVE"

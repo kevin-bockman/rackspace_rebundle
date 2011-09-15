@@ -30,15 +30,15 @@ find /var/spool -type f -exec ~/truncate.sh {} \;
 rm -rf /tmp/* /tmp/.*
 
 #
-# Package manager cleanup
-#
+# Package manager cleanup /
+# Distro specific stuff
+# 
 case $os in
 "centos")
   yum -y clean all
   ;;
 "ubuntu")
   apt-get clean
-  mkdir /tmp/agent-smith
 
   sed -i s/root::/root:*:/ /etc/shadow
   ;; 
@@ -62,6 +62,8 @@ if [ "$os" == "ubuntu" ]; then
 
   # Create man cache
   mandb --create
+
+  mkdir /var/cache/nscd
 fi
 
 #
@@ -80,5 +82,7 @@ rm -rf /root/.gem
 rm -f /root/*.tar
 rm -rf /root/files
 rm -f /root/*
-rm -f /root/.bash_history /root/.vim* /root/.lesshst
+rm -f /root/.bash_history /root/.vim* /root/.lesshst /root/.gemrc
 rm -rf /root/.cache
+
+updatedb

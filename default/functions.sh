@@ -1,4 +1,5 @@
 os=$(lsb_release -is|tr '[:upper:]' '[:lower:]'|tr -d '\n')
+codename=$(lsb_release -cs)
 rightlink_ver=$1
 rightlink_os=$os
 rightlink_os_ver=$(lsb_release -rs)
@@ -60,9 +61,6 @@ build() {
     ;;
   esac
    
-  $pkg_mgr -y install rubygems 
-  gem install --remote rake $rake
-  
   if [ -d /opt/rightscale/sandbox ]; then mv /opt/rightscale/sandbox /opt/rightscale/sandbox.OLD; fi
   cd /tmp/sandbox_builds
   export ARCH="x86_64"
@@ -77,6 +75,7 @@ build() {
 }
 
 post() {
+  mkdir -p /etc/rightscale.d
   echo $rightlink_ver > /etc/rightscale.d/rightscale-release
   chmod 0770 /root/.rightscale
   chmod 0440 /root/.rightscale/*
@@ -86,14 +85,12 @@ post() {
 
   case $rightlink_os in
   "centos")
-    agent="nova-agent"
     chkconfig --add rightimage
     ;;
   "ubuntu")
-    agent="agent-smith"
     update-rc.d rightimage start 96 2 3 4 5 . stop 1 0 1 6 .
     ;;
   esac
 
-  sed -i "s/amazon$/${agent}/g" /etc/init.d/rightimage
+  sed -i "s/amazon$/nova-agent/g" /etc/init.d/rightimage
 }
