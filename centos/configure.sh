@@ -128,6 +128,7 @@ echo "localhost" > /etc/hostname
 echo "127.0.0.1   localhost   localhost.localdomain" > /etc/hosts
 # ensure newline at end of resolv.conf
 echo "" >> /etc/resolv.conf
+chmod 644 /etc/resolv.conf
 
 set +e
 file="/etc/sysconfig/network"
