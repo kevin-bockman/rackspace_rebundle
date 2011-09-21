@@ -41,6 +41,7 @@ puts `#{drop}`
 hostname_path = File.join(File.dirname(__FILE__), "..", "rax_hostname")
 hostname = IO.read hostname_path
 
+# TODO: lsb package is not installed by default on CentOS...
 puts "Copying files..."
 distro = execute("ssh -q root@#{hostname} lsb_release -is").chomp.downcase
 execute("scp -r #{distro}/* default/* packagediff.sh root@#{hostname}:/root/")
