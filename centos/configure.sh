@@ -138,6 +138,9 @@ if [ "$?" == "1" ]; then
 fi
 set -e
 
+# Fix NTP
+echo 1 > /proc/sys/xen/independent_wallclock
+
 #
 #
 # Cleanup
