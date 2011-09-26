@@ -108,8 +108,9 @@ chmod 775 /etc/profile.d/java.sh
 # 
 if [ ! -e /usr/sbin/nova-agent ]; then
   file=$(ls /root/files/nova-*.tar.gz)
-  tar zxvf $file -C /tmp
-  /tmp/installer.sh
+  mkdir -p /tmp/nova-agent
+  tar zxvf $file -C /tmp/nova-agent
+  /tmp/nova-agent/installer.sh
 fi
 
 update-rc.d -f agent-smith remove
