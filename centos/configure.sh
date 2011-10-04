@@ -138,8 +138,30 @@ if [ "$?" == "1" ]; then
 fi
 set -e
 
-# Fix NTP
-echo 1 > /proc/sys/xen/independent_wallclock
+# NTP (w-3981)
+set +e
+grep "xen.independent_wallclock=1" /etc/sysctl.conf
+[ "$?" == "1" ] && echo "xen.independent_wallclock=1" >> /etc/sysctl.conf
+echo "jiffies" > /sys/devices/system/clocksource/clocksource0/current_clocksource
+
+yum -y install ntp
+chkconfig ntpd on
+
+ntp_conf="/etc/ntp.conf"
+sed -i "s/server 0.centos.pool.ntp.org/server ec2-us-east.time.rightscale.com burst iburst/" $ntp_conf
+sed -i "s/server 1.centos.pool.ntp.org/server ec2-us-west.time.rightscale.com burst iburst/" $ntp_conf
+sed -i "s/server 2.centos.pool.ntp.org/server time.rightscale.com burst iburst/" $ntp_conf
+
+ntp_sys="/etc/sysconfig/ntpd"
+grep " -g" $ntp_sys
+[ "$?" == "1" ] && echo "OPTIONS=\"\$OPTIONS -g\"" >> $ntp_sys
+
+grep "tinker panic 0" $ntp_conf
+[ "$?" == "1" ] && sed -i "1i tinker panic 0 dispersion 1.000" $ntp_conf
+
+sed -i "/^server.*127.127/d" $ntp_conf
+sed -i "/^fudge.*127.127/d" $ntp_conf
+set -e
 
 #
 #
