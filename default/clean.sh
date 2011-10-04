@@ -41,8 +41,10 @@ case $os in
   apt-get clean
 
   sed -i s/root::/root:*:/ /etc/shadow
+  service ntp stop
   ;; 
 esac
+
 
 #
 # Log files
@@ -63,7 +65,8 @@ if [ "$os" == "ubuntu" ]; then
   # Create man cache
   mandb --create
 
-  mkdir /var/cache/nscd
+  mkdir /var/cache/nscd  
+  rm -rf /var/lib/ntp/ntp.drift
 fi
 
 #
@@ -83,6 +86,7 @@ rm -f /root/*.tar
 rm -rf /root/files
 rm -f /root/*
 rm -f /root/.bash_history /root/.vim* /root/.lesshst /root/.gemrc
-rm -rf /root/.cache
+rm -rf /root/.cache /root/.vim
 
 updatedb
+sync

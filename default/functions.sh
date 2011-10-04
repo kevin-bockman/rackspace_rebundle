@@ -41,6 +41,7 @@ download() {
   if [ "$?" == "0" ]; then
     set -e
     post
+    set +e
     return 0
   fi
 

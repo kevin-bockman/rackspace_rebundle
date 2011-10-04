@@ -138,6 +138,11 @@ fi
 set -e
 
 #
+# Fix NTP (w-3981)
+#
+echo 1 > /proc/sys/xen/independent_wallclock
+
+#
 #
 # Cleanup
 #
