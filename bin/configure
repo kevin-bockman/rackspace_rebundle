@@ -1,0 +1,2 @@
+#!/bin/bash -x
+ssh -q root@`cat rax_hostname` bash -ex /root/configure.sh $1

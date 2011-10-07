@@ -1,3 +1,6 @@
 .DS_Store
 .rackspace
 *.swp
+rax_hostname
+rax_password
+sandbox_builds/

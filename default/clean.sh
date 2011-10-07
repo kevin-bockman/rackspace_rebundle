@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash -x
+source functions.sh
+
 #
 # Clean image before bundling
 #
@@ -20,24 +22,29 @@ echo -n "rackspace" > /etc/rightscale.d/cloud
 cp /tmp/rightscale-release /etc/rightscale.d/rightscale-release 
 
 #
-# /etc
-#
-rm -f /etc/hosts.backup.*
-rm -rf /etc/ssh/ssh_host_*
-
-#
-# Yum
-#
-yum -y clean all
-
-#
 # State information
 #
 rm -f /var/spool/cloud/*
 service postfix stop
 find /var/spool -type f -exec ~/truncate.sh {} \;
 rm -rf /tmp/* /tmp/.*
-mkdir /tmp/agent-smith
+
+#
+# Package manager cleanup /
+# Distro specific stuff
+# 
+case $os in
+"centos")
+  yum -y clean all
+  ;;
+"ubuntu")
+  apt-get clean
+
+  sed -i s/root::/root:*:/ /etc/shadow
+  service ntp stop
+  ;; 
+esac
+
 
 #
 # Log files
@@ -50,13 +57,36 @@ rm -rf /var/mail/*
 find /etc -name \*~ -exec rm -- {} \;
 find /etc -name \*.backup* -exec rm -- {} \;
 
+if [ "$os" == "ubuntu" ]; then
+  # Rebuild Apt cache
+  mkdir -p /var/cache/apt/archives/partial /var/cache/debconf
+  apt-cache gencaches
+
+  # Create man cache
+  mandb --create
+
+  mkdir /var/cache/nscd  
+  rm -rf /var/lib/ntp/ntp.drift
+fi
+
+#
+# /etc
+#
+rm -f /etc/hosts.backup.*
+
+cp /root/files/sshd_config /etc/ssh
+rm -rf /etc/ssh/ssh_host_*
+
 #
 # /root
 #
 rm -rf /root/.ssh
 rm -rf /root/.gem
 rm -f /root/*.tar
-cp /root/files/.* /root
 rm -rf /root/files
 rm -f /root/*
-rm -f /root/.bash_history /root/.vim* /root/.lesshst
+rm -f /root/.bash_history /root/.vim* /root/.lesshst /root/.gemrc
+rm -rf /root/.cache /root/.vim
+
+updatedb
+sync

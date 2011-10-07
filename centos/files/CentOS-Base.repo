@@ -1,0 +1,57 @@
+[base]
+name = none
+baseurl = http://mirror.rightscale.com/centos/$releasever/os/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+
+[addons]
+name = none
+baseurl = http://mirror.rightscale.com/centos/$releasever/addons/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+
+[centosplus]
+name = none
+baseurl = http://mirror.rightscale.com/centos/$releasever/centosplus/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+
+[extras]
+name = none
+baseurl = http://mirror.rightscale.com/centos/$releasever/extras/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+
+[updates]
+name = none
+baseurl = http://mirror.rightscale.com/centos/$releasever/updates/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+
+[epel]
+name = none
+baseurl = http://mirror.rightscale.com/epel/5/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
+
+[rightscale-epel]
+name = none
+baseurl = http://mirror.rightscale.com/rightscale_software/epel/5/$basearch/archive/latest/
+failovermethod=priority
+gpgcheck=0
+enabled=1
+gpgkey=
+# set metadata to expire faster then main
+metadata_expire=30

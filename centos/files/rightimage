@@ -15,8 +15,8 @@
 # Default-Stop:      0 1 6
 # Short-Description: RightLink agent
 # Description:       Starts or stops the RightLink agent.
-# X-Start-Before:    amazon
-# X-Stop-After:      amazon
+# X-Start-Before:    nova-agent 
+# X-Stop-After:      nova-agent
 ### END INIT INFO
 
 #############################################################################
@@ -92,7 +92,7 @@ function init_os_state() {
 
     #On some systems, uname -i fails
     if [ "$RS_ARCH" == "unknown" ]; then
-      export RS_ARCH=`uname -m || echo unknown`      
+      export RS_ARCH=`uname -m || echo unknown`
     fi
 
     #Sometimes i686 is reported; this is equivalent to i386 for our purposes
@@ -184,10 +184,10 @@ function get_cloud_userdata() {
       logger -st RightScale "Successfully retrieved user-data from metadata server"
       ;;
 
-    #In VMOps clouds, our userdata comes from our DOM router who also happens to
+    #In CloudStack clouds, our userdata comes from our DOM router who also happens to
     #be our DHCP server. Scrape the DHCP leases file and query the DHCP server
     #for metadata.
-    vmops*)
+    cloudstack*)
       for candidate in [ /var/lib/dhcp3/dhclient.eth0.leases /var/lib/dhclient/dhclient-eth0.leases /var/lib/dhclient-eth0.leases ]; do
         if [ -f $candidate ]; then
           leases_file=$candidate
@@ -198,7 +198,7 @@ function get_cloud_userdata() {
         exit 1
       fi
 
-      server_ip=$(grep dhcp-server-identifier $leases_file | tail -1 | awk '{print $NF}' | tr '\;' ' ')
+      server_ip=$(grep dhcp-server-identifier $leases_file | tail -1 | awk '{print $NF}' | tr '\;' ' ' | tr -d ' ')
       false
       while [ $? -ne 0 ]; do
         logger -st RightScale "Querying metadata server..."
@@ -207,7 +207,7 @@ function get_cloud_userdata() {
       done
       ;;
     rackspace*)
-      CLOUD_USERDATA=`cat /var/spool/rackspace/user-data.txt`      
+      CLOUD_USERDATA=`cat /var/spool/rackspace/user-data.txt`
       ;;
     *)
       logger -st RightScale "Unable to query user data - unknown cloud family $RS_CLOUD. Cannot continue."
@@ -241,7 +241,7 @@ TARBALL_NAME=""
 function get_package_names() {
   if [ "$RS_BASE_OS" == "debian" ]; then
     suffix="deb"
-  elif [ "$RS_BASE_OS" == 'suse' ]; then 
+  elif [ "$RS_BASE_OS" == 'suse' ]; then
     suffix="rpm"
   elif [ "$RS_BASE_OS" == "redhat" ]; then
     suffix="rpm"
@@ -252,45 +252,58 @@ function get_package_names() {
   TARBALL_NAME="rightscale_${RS_SRC}.tgz"
 }
 
-function download_package() {
+function download_package_or_tarball() {
   mkdir -p $WORKING_DIR
 
   if [ $1 == $S3_DEV_BUCKET ] ; then
     PACKAGE_NAME=$DEV_PACKAGE_NAME
   fi
 
-  #First, try to download package from a subdir corresponding to the package version AND distro
-  CODE=500
-  while [ "$CODE" -ge "500" ]; do
-    CODE=`curl "${CURL_OPT[@]}" -w '%{http_code}' -o $WORKING_DIR/$PACKAGE_NAME $1/$RS_VERSION/$RS_DISTRO/$PACKAGE_NAME`
-    logger -st RightScale "Downloading $PACKAGE_NAME - curl returned code: $CODE"
-  done
+  url_list=(
+    "$1/$RS_VERSION/$RS_DISTRO/$PACKAGE_NAME"
+    "$1/$RS_VERSION/$PACKAGE_NAME"
+    "$1/$PACKAGE_NAME"
+    "$1/$TARBALL_NAME"
+    "$1/$RS_SRC"
+    "$RS_SRC"
+  )
 
-  #Next, try to download package from a subdir corresponding to just the package version
-  if [ ! -e $WORKING_DIR/$PACKAGE_NAME ]; then
-    CODE=500
-    while [ "$CODE" -ge "500" ]; do
-      CODE=`curl "${CURL_OPT[@]}" -w '%{http_code}' -o $WORKING_DIR/$PACKAGE_NAME $1/$RS_VERSION/$PACKAGE_NAME`
-      logger -st RightScale "Downloading $PACKAGE_NAME - curl returned code: $CODE"
-    done
-  fi
-
-  #Finally, try to download package from the root dir of the download URL
-  if [ ! -e $WORKING_DIR/$PACKAGE_NAME ]; then
-    CODE=500
-    while [ "$CODE" -ge "500" ]; do
-      CODE=`curl "${CURL_OPT[@]}" -w '%{http_code}' -o $WORKING_DIR/$PACKAGE_NAME $1/$PACKAGE_NAME`
-      logger -st RightScale "Downloading $PACKAGE_NAME - curl returned code: $CODE"
-    done
+  package_extension="${PACKAGE_NAME##*.}"
+  download_file url_list[@] "rightlink.installer"
+  if [ $?==0 ] ; then
+    local actual_extension=${DOWNLOADED_FILE_NAME##*.}
+    if [ "$package_extension" == "$actual_extension" ] ; then
+      PACKAGE_NAME=$DOWNLOADED_FILE_NAME
+    elif [ "tgz" == "$actual_extension" ] ; then
+      TARBALL_NAME=$DOWNLOADED_FILE_NAME
+    fi
   fi
 }
 
-function download_tarball() {
-  CODE=500
-  while [ "$CODE" -ge "500" ]; do
-    CODE=`curl "${CURL_OPT[@]}" -w '%{http_code}' -o $WORKING_DIR/$TARBALL_NAME $1/$TARBALL_NAME`
-    logger -st RightScale "Downloading $TARBALL_NAME - curl returned code: $CODE"
+DOWNLOADED_FILE_NAME=
+function download_file() {
+  declare -a urls=("${!1}")
+  local temp_filename=$2
+
+  local final_filename=""
+  local output_file=$WORKING_DIR/$temp_filename
+  for url in "${urls[@]}" ; do
+    CODE=500
+    while [ "$CODE" -ge "500" ]; do
+      logger -st RightScale "Downloading $temp_filename from $url"
+      CODE=`curl "${CURL_OPT[@]}" -w '%{http_code}' -o $output_file $url`
+      logger -st RightScale "curl returned code: $CODE"
+      final_filename=$(basename $url)
+    done
+
+    if [[ -e $output_file ]]; then
+      DOWNLOADED_FILE_NAME=$final_filename
+      mv $output_file $WORKING_DIR/$final_filename
+      return 0;
+    fi
   done
+
+  return 1;
 }
 
 function install_package() {
@@ -302,19 +315,19 @@ function install_package() {
     dpkg_output=`dpkg -i $WORKING_DIR/$1  2>&1`
 
     if [[ "$dpkg_output" =~ "dependency problems prevent configuration" ]]; then
-      # install may have failed due to missing dependencies. 
+      # install may have failed due to missing dependencies.
       echo "$dpkg_output" | logger -st RightScale
-	  exit 1 # Dependencies not installed in image -- fail  
+	  exit 1 # Dependencies not installed in image -- fail
     else
       #If everything went okay, log the original dpkg output
       echo "$dpkg_output" | logger -st RightScale
     fi
   elif [ "$RS_BASE_OS" == "redhat" -o "$RS_BASE_OS" == 'suse' ]; then
     rpm_output=`rpm -iv $WORKING_DIR/$1 2>&1` | logger -st RightScale
-    if [ $? != 0 ]; then 
-	  # install may have failed due to missing dependencies. 
+    if [ $? != 0 ]; then
+	  # install may have failed due to missing dependencies.
       echo "$rpm_output" | logger -st RightScale
-	  exit 1 # Dependencies not installed in image -- fail 
+	  exit 1 # Dependencies not installed in image -- fail
 	fi
   fi
 }
@@ -373,7 +386,7 @@ function start() {
       pkg_query_cmd="zypper packages"
     else
       pkg_query_cmd="yum list installed"
-    fi 
+    fi
 
     # Install rightscale package if it isn't already installed
     if ! `$pkg_query_cmd | grep rightscale`; then
@@ -397,12 +410,11 @@ function start() {
   #  4) We always download from the S3 bucket "rightscale_rightlink_dev"
   else
     logger -st RightScale "Fetching dev package/tarball in $S3_DEV_BUCKET"
-    download_package $S3_DEV_BUCKET
-    download_tarball $S3_DEV_BUCKET
+    download_package_or_tarball $S3_DEV_BUCKET
 
-    if [ -e $WORKING_DIR/$DEV_PACKAGE_NAME ]; then
-      logger -st RightScale "Installing dev package $DEV_PACKAGE_NAME"
-      install_package $DEV_PACKAGE_NAME
+    if [ -e $WORKING_DIR/$PACKAGE_NAME ]; then
+      logger -st RightScale "Installing dev package $PACKAGE_NAME"
+      install_package $PACKAGE_NAME
       remove_me
     elif [ -e $WORKING_DIR/$TARBALL_NAME ]; then
       logger -st RightScale "Installing dev tarball $TARBALL_NAME"

@@ -3,12 +3,72 @@
 # Upload everything to a vanilla image
 # prior to setup.
 #
-# Syntax: upload <server_address> <distro> <ssh_key>
+# Syntax: upload --rightlink X.X.X 
 #
 # cary@rightscale.com
 #
-raise "Specify distro as: centos, redhat, or ubuntu" unless ARGV[1]
-key=""
-key="-i #{ARGV[2]}" if ARGV[2]
+require 'rubygems'
+require 'fileutils'
+require 'trollop'
 
-puts `scp #{key} -r #{ARGV[1]}/* packagediff.sh root@#{ARGV[0]}:/root/`
+opts = Trollop::options do
+  banner <<-EOS
+  EOS
+
+  opt :rightlink, "RightLink version", :type => String
+  opt :no_checkout, "Don't checkout RightLink repo"
+  opt :no_configure, "Don't automatically run configure script"
+end
+Trollop::die :rightlink, "must be specified" unless opts[:rightlink] || (opts[:no_checkout] && opts[:no_configure])
+
+def execute(command)
+  puts "running: #{command}"
+  result = `#{command}`
+  puts result
+  raise "FATAL: #{command} failed" unless $?.success?
+  result
+end
+
+rightlink_ver = opts[:rightlink]
+
+puts "Installing depenencies..."
+puts `apt-get -y install expect`
+
+puts "Installing SSH key..."
+drop = File.join(File.dirname(__FILE__), "sshkeydrop.expect")
+puts `#{drop}`
+
+hostname_path = File.join(File.dirname(__FILE__), "..", "rax_hostname")
+hostname = IO.read hostname_path
+
+# TODO: lsb package is not installed by default on CentOS...
+puts "Copying files..."
+distro = execute("ssh -q root@#{hostname} lsb_release -is").chomp.downcase
+execute("scp -r #{distro}/* default/* packagediff.sh root@#{hostname}:/root/")
+
+# TODO: Check if package exists
+unless opts[:no_checkout]
+  puts "Checking out RightLink repo..."
+  FileUtils.rm_rf "sandbox_builds" if File.exists? "sandbox_builds"
+  execute("git clone git@github.com:rightscale/sandbox_builds.git")
+  Dir.chdir("sandbox_builds")
+  execute("git reset rightlink_package_#{rightlink_ver} --hard")
+  execute("git submodule init")
+  execute("git submodule update")
+  Dir.chdir("repos/right_net")
+  execute("git submodule init")
+  execute("git submodule update")
+  Dir.chdir("../../..")
+end
+
+execute("ssh root@#{hostname} apt-get -y install rsync") if distro == "ubuntu"
+execute("rsync -avz --exclude=.git sandbox_builds root@#{hostname}:/tmp")
+
+if opts[:no_configure]
+  password_path = File.join(File.dirname(__FILE__), "..", "rax_password")
+  password = IO.read password_path
+
+  puts "IP: #{hostname} PASSWORD: #{password}"
+else
+  execute("ssh root@#{hostname} /root/configure.sh #{rightlink_ver}") 
+end
